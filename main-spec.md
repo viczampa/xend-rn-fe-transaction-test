@@ -55,6 +55,256 @@ The login credentials are **test-only** and are kept in `.env` (never committed)
 - **Asset / status filters and search**: prefer **server-side** filtering when supported by the endpoint query parameters. Fall back to client-side filtering on the already-fetched page only when the server cannot do it.
 - **Pagination**: server-side, via React Query's `useInfiniteQuery`.
 
+### Example request
+
+```bash
+curl -X 'GET' \
+  'https://dev.xendora.com/api/transactions?page=1&pageSize=12' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer <YOUR_TOKEN>'
+```
+
+> Replace `<YOUR_TOKEN>` with the Bearer token obtained from the login endpoint. The token is stored at runtime by `expo-secure-store` and injected by the API client — it is never hardcoded.
+
+### Example response (truncated to 2 items)
+
+The full response envelope is `{ data: Transaction[], meta: { total, page, pageSize } }`. Each `Transaction` object has the shape below — use it as the TypeScript interface source of truth.
+
+```json
+{
+  "data": [
+    {
+      "id": "59803a78-8c74-4437-871c-f707e0d56e44",
+      "createdAt": "2026-04-20T23:13:21.181Z",
+      "provider": "BRIDGE",
+      "providerId": "446fb0a8-2359-4261-a74b-5e9448cbd784",
+      "providerEventId": null,
+      "type": "WITHDRAWAL",
+      "status": "COMPLETED",
+      "rail": "SEPA",
+      "rawStatus": "payment_processed",
+      "description": null,
+      "accountId": "90bbec0a-9c28-4b54-9dfb-d0751b373bbe",
+      "customerId": "918f5722-f9f1-4a1f-a226-11231884d5ea",
+      "counterpartyId": "092715d1-809b-43d3-8911-07a10423eaa1",
+      "depositInstructionId": null,
+      "imad": null,
+      "references": null,
+      "date": "2026-04-09T08:07:17.922Z",
+      "completedAt": "2026-04-09T08:08:34.150Z",
+      "raw": {
+        "id": "446fb0a8-2359-4261-a74b-5e9448cbd784",
+        "state": "payment_processed",
+        "amount": "49.0",
+        "currency": "usdc",
+        "created_at": "2026-04-09T08:07:17.922Z",
+        "receipt_url": "https://dashboard.bridge.xyz/transaction/797213e2-a604-473d-a3f2-a9637d3e8364/receipt/115e2c1f-a5a0-47e6-b3a1-2c6f0ae7c14d",
+        "from_address": "0x1f951dd760da387ccb5ed9757f5de4f6be5228cb",
+        "deposit_tx_hash": "0xcbd950d26c8625f744b34a4da087f3addabed48905723ec1154f03e151625335",
+        "destination_uetr": "010F271260991A29",
+        "destination_currency": "eur",
+        "receipt_exchange_rate": "0.853061",
+        "receipt_initial_amount": "49.0",
+        "receipt_outgoing_amount": "41.8",
+        "receipt_converted_amount": "41.8",
+        "destination_payment_rail": "sepa",
+        "destination_sepa_reference": "BRZ to Eur",
+        "receipt_destination_currency": "eur",
+        "destination_external_account_id": "14d38a99-7f69-4528-bd45-630189c0c71d"
+      },
+      "source": {
+        "name": "Guilherme Teixeira",
+        "amount": {
+          "value": "49.000000000000000000",
+          "currency": "USDC"
+        },
+        "address": {
+          "addressLine1": null,
+          "addressLine2": null,
+          "city": null,
+          "state": null,
+          "postalCode": null,
+          "country": null
+        },
+        "accountId": "90bbec0a-9c28-4b54-9dfb-d0751b373bbe",
+        "customerId": "918f5722-f9f1-4a1f-a226-11231884d5ea",
+        "counterpartyId": null,
+        "rail": "CRYPTO",
+        "details": {
+          "address": "0x1f951dd760da387ccb5ed9757f5de4f6be5228cb",
+          "asset": "usdc",
+          "network": "ethereum",
+          "walletId": null,
+          "tag": null,
+          "memo": null
+        }
+      },
+      "destination": {
+        "name": "Guilherme Yoshida",
+        "amount": {
+          "value": "41.800000000000000000",
+          "currency": "EUR"
+        },
+        "address": {
+          "addressLine1": null,
+          "addressLine2": null,
+          "city": null,
+          "state": null,
+          "postalCode": null,
+          "country": null
+        },
+        "accountId": null,
+        "customerId": null,
+        "counterpartyId": "092715d1-809b-43d3-8911-07a10423eaa1",
+        "rail": "SEPA",
+        "details": {
+          "accountOwnerName": null,
+          "accountOwnerType": null,
+          "firstName": null,
+          "lastName": null,
+          "bankName": "N26 Bank SE",
+          "accountNumber": "ES9715632626353264127881",
+          "address": {
+            "addressLine1": "Camino el Olivar 25",
+            "addressLine2": null,
+            "city": null,
+            "state": null,
+            "postalCode": null,
+            "country": null
+          },
+          "iban": "ES9715632626353264127881",
+          "bic": "NTSBESM1XXX"
+        }
+      }
+    },
+    {
+      "id": "dfe639c7-2a39-4a6d-afb9-aa85dc8fc057",
+      "createdAt": "2026-04-20T23:13:21.181Z",
+      "provider": "BRIDGE",
+      "providerId": "774fa3ff-d157-4acd-9e6d-715c38901fa6",
+      "providerEventId": null,
+      "type": "WITHDRAWAL",
+      "status": "COMPLETED",
+      "rail": "SEPA",
+      "rawStatus": "payment_processed",
+      "description": null,
+      "accountId": "90bbec0a-9c28-4b54-9dfb-d0751b373bbe",
+      "customerId": "918f5722-f9f1-4a1f-a226-11231884d5ea",
+      "counterpartyId": "092715d1-809b-43d3-8911-07a10423eaa1",
+      "depositInstructionId": null,
+      "imad": null,
+      "references": null,
+      "date": "2026-04-07T16:00:55.266Z",
+      "completedAt": "2026-04-07T16:03:34.008Z",
+      "raw": {
+        "id": "774fa3ff-d157-4acd-9e6d-715c38901fa6",
+        "state": "payment_processed",
+        "amount": "1850.0",
+        "currency": "usdc",
+        "created_at": "2026-04-07T16:00:55.266Z",
+        "receipt_url": "https://dashboard.bridge.xyz/transaction/b0806a9f-23e3-4c48-ad16-1e73e73794b8/receipt/b876e797-028e-480c-9768-74649fc1eeaf",
+        "from_address": "0x1f951dd760da387ccb5ed9757f5de4f6be5228cb",
+        "deposit_tx_hash": "0x2ec7bb010aa48596d7d63c234872b2b3dc53c09aad135772c5a6bc0fcf0cac04",
+        "destination_uetr": "010F271260973K2E",
+        "destination_currency": "eur",
+        "receipt_exchange_rate": "0.859875",
+        "receipt_initial_amount": "1850.0",
+        "receipt_outgoing_amount": "1590.77",
+        "receipt_converted_amount": "1590.77",
+        "destination_payment_rail": "sepa",
+        "destination_sepa_reference": "BRZ to Eur",
+        "receipt_destination_currency": "eur",
+        "destination_external_account_id": "14d38a99-7f69-4528-bd45-630189c0c71d"
+      },
+      "source": {
+        "name": "Guilherme Teixeira",
+        "amount": {
+          "value": "1850.000000000000000000",
+          "currency": "USDC"
+        },
+        "address": {
+          "addressLine1": null,
+          "addressLine2": null,
+          "city": null,
+          "state": null,
+          "postalCode": null,
+          "country": null
+        },
+        "accountId": "90bbec0a-9c28-4b54-9dfb-d0751b373bbe",
+        "customerId": "918f5722-f9f1-4a1f-a226-11231884d5ea",
+        "counterpartyId": null,
+        "rail": "CRYPTO",
+        "details": {
+          "address": "0x1f951dd760da387ccb5ed9757f5de4f6be5228cb",
+          "asset": "usdc",
+          "network": "ethereum",
+          "walletId": null,
+          "tag": null,
+          "memo": null
+        }
+      },
+      "destination": {
+        "name": "Guilherme Yoshida",
+        "amount": {
+          "value": "1590.770000000000000000",
+          "currency": "EUR"
+        },
+        "address": {
+          "addressLine1": null,
+          "addressLine2": null,
+          "city": null,
+          "state": null,
+          "postalCode": null,
+          "country": null
+        },
+        "accountId": null,
+        "customerId": null,
+        "counterpartyId": "092715d1-809b-43d3-8911-07a10423eaa1",
+        "rail": "SEPA",
+        "details": {
+          "accountOwnerName": null,
+          "accountOwnerType": null,
+          "firstName": null,
+          "lastName": null,
+          "bankName": "N26 Bank SE",
+          "accountNumber": "ES9715632626353264127881",
+          "address": {
+            "addressLine1": "Camino el Olivar 25",
+            "addressLine2": null,
+            "city": null,
+            "state": null,
+            "postalCode": null,
+            "country": null
+          },
+          "iban": "ES9715632626353264127881",
+          "bic": "NTSBESM1XXX"
+        }
+      }
+    }
+  ]
+}
+```
+
+### Key fields to render from the response
+
+| UI element              | Source field(s)                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------ |
+| Transaction type        | `type` — `WITHDRAWAL`, `DEPOSIT`, `EXCHANGE`                                         |
+| Rail / method           | `rail` — `SEPA`, `ACH`, `WIRE`, `CRYPTO`                                             |
+| Status pill             | `status` — `COMPLETED`, `PENDING`, `FAILED`                                          |
+| Date & time             | `date` (transaction date) or `createdAt`                                             |
+| Source asset + amount   | `source.amount.currency` + `source.amount.value`                                     |
+| Destination asset + amount | `destination.amount.currency` + `destination.amount.value`                        |
+| Counterparty name       | `destination.name` (for withdrawals) or `source.name` (for deposits)                |
+| **Bottom sheet — tx hash**  | `raw.deposit_tx_hash` or `raw.destination_tx_hash`                               |
+| **Bottom sheet — from address** | `raw.from_address` / `source.details.address`                                |
+| **Bottom sheet — network**  | `source.details.network`                                                         |
+| **Bottom sheet — bank**     | `destination.details.bankName`                                                   |
+| **Bottom sheet — IBAN**     | `destination.details.iban`                                                       |
+| **Bottom sheet — BIC**      | `destination.details.bic`                                                        |
+| **Bottom sheet — exchange rate** | `raw.receipt_exchange_rate`                                                 |
+| **Bottom sheet — receipt**  | `raw.receipt_url`                                                                |
+
 ---
 
 ## Actual base UI design reference
