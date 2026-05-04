@@ -1,7 +1,7 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import { getAuthToken, removeAuthToken } from './authTokenStorage';
 
-export const TOKEN_KEY = 'xendora_access_token';
+export { TOKEN_KEY } from './authTokenStorage';
 
 export const apiClient = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
@@ -10,7 +10,7 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use(async (config) => {
-  const token = await SecureStore.getItemAsync(TOKEN_KEY);
+  const token = await getAuthToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -21,7 +21,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      await SecureStore.deleteItemAsync(TOKEN_KEY);
+      await removeAuthToken();
     }
     return Promise.reject(error);
   },

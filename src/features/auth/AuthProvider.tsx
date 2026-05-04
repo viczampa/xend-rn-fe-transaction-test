@@ -5,9 +5,12 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import * as SecureStore from 'expo-secure-store';
 import { login as apiLogin } from '@/src/api/auth.api';
-import { TOKEN_KEY } from '@/src/api/client';
+import {
+  getAuthToken,
+  removeAuthToken,
+  setAuthToken,
+} from '@/src/api/authTokenStorage';
 
 interface AuthState {
   token: string | null;
@@ -30,19 +33,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    SecureStore.getItemAsync(TOKEN_KEY).then((token) => {
-      setState({ token, isAuthenticated: !!token, isLoading: false });
-    });
+    getAuthToken()
+      .then((token) => {
+        setState({ token, isAuthenticated: !!token, isLoading: false });
+      })
+      .catch(() => {
+        setState({ token: null, isAuthenticated: false, isLoading: false });
+      });
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const token = await apiLogin({ email, password });
-    await SecureStore.setItemAsync(TOKEN_KEY, token);
+    await setAuthToken(token);
     setState({ token, isAuthenticated: true, isLoading: false });
   }, []);
 
   const logout = useCallback(async () => {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    await removeAuthToken();
     setState({ token: null, isAuthenticated: false, isLoading: false });
   }, []);
 

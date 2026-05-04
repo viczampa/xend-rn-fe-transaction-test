@@ -5,22 +5,17 @@ import { StatusBadge } from '@/src/components/StatusBadge';
 import { TypeBadge } from '@/src/components/TypeBadge';
 import { formatAmount, formatRelativeDate } from '@/src/utils/format';
 import type { Transaction } from './types';
+import { getCounterpartyLabel } from './counterparty';
 
 interface Props {
   transaction: Transaction;
   onPress: (t: Transaction) => void;
 }
 
-function getCounterparty(t: Transaction): string {
-  if (t.type === 'WITHDRAWAL') return t.destination.name || 'Unknown';
-  if (t.type === 'DEPOSIT') return t.source.name || 'Unknown';
-  return `${t.source.amount.currency.toUpperCase()} → ${t.destination.amount.currency.toUpperCase()}`;
-}
-
 export const TransactionRow = memo(function TransactionRow({ transaction: t, onPress }: Props) {
   const { colors, spacing } = useTheme();
 
-  const counterparty = getCounterparty(t);
+  const counterparty = getCounterpartyLabel(t);
   const srcAmount = formatAmount(t.source.amount.value, t.source.amount.currency);
   const dstAmount = formatAmount(t.destination.amount.value, t.destination.amount.currency);
   const isConversion = t.source.amount.currency !== t.destination.amount.currency;

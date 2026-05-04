@@ -8,11 +8,19 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   ETH: 'Ξ',
 };
 
-export function formatAmount(value: string | number, currency: string): string {
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-  if (Number.isNaN(num)) return `— ${currency.toUpperCase()}`;
+export function formatAmount(
+  value: string | number | null | undefined,
+  currency: string | null | undefined,
+): string {
+  const upperFallback = (currency ?? '').toUpperCase();
+  const dash = upperFallback ? `— ${upperFallback}` : '—';
 
-  const upper = currency.toUpperCase();
+  if (value === null || value === undefined || value === '') return dash;
+
+  const num = typeof value === 'string' ? parseFloat(value.trim()) : Number(value);
+  if (!Number.isFinite(num)) return dash;
+
+  const upper = upperFallback || 'UNK';
   const isFiat = ['USD', 'EUR', 'GBP', 'BRL'].includes(upper);
   const decimals = isFiat ? 2 : Math.min(6, countSignificantDecimals(num));
   const formatted = num.toLocaleString('en-US', {
@@ -26,6 +34,7 @@ export function formatAmount(value: string | number, currency: string): string {
 }
 
 function countSignificantDecimals(n: number): number {
+  if (!Number.isFinite(n)) return 0;
   const str = n.toString();
   const dot = str.indexOf('.');
   if (dot === -1) return 0;
