@@ -48,8 +48,7 @@ describe('formatRelativeDate', () => {
 
   it('returns formatted date for old dates', () => {
     const old = '2024-01-01T00:00:00.000Z';
-    const result = formatRelativeDate(old);
-    expect(result).toMatch(/Jan 1, 2024/);
+    expect(formatRelativeDate(old)).toBe(formatDate(old));
   });
 });
 
@@ -72,6 +71,15 @@ describe('shortenHash', () => {
   it('returns the full hash if short enough', () => {
     const short = '0x1234';
     expect(shortenHash(short)).toBe(short);
+  });
+
+  it('returns — for non-string values (API shape drift)', () => {
+    expect(shortenHash({ foo: 'bar' })).toBe('—');
+    expect(shortenHash(['a'])).toBe('—');
+  });
+
+  it('stringifies numbers', () => {
+    expect(shortenHash(12345)).toBe('12345');
   });
 });
 

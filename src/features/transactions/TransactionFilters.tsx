@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
+  Platform,
+  type TextStyle,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '@/src/theme';
@@ -84,6 +86,7 @@ export function TransactionFilters({
   hasActiveFilters,
 }: Props) {
   const { colors, spacing } = useTheme();
+  const [searchFocused, setSearchFocused] = useState(false);
 
   const handleAssetPress = useCallback(
     (asset: string | undefined) => {
@@ -103,7 +106,7 @@ export function TransactionFilters({
           styles.searchRow,
           {
             backgroundColor: colors.surface,
-            borderColor: colors.border,
+            borderColor: searchFocused ? colors.textSubtle : colors.border,
             marginHorizontal: spacing.md,
           },
         ]}
@@ -112,9 +115,14 @@ export function TransactionFilters({
         <TextInput
           value={search}
           onChangeText={onSearchChange}
-          placeholder="Search by counterparty…"
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
+          placeholder="Search by name or bank"
+          accessibilityLabel="Search transactions"
+          accessibilityHint="Filters by names, sender or receiver, and bank name"
           placeholderTextColor={colors.textMuted}
-          style={[styles.searchInput, { color: colors.text }]}
+          underlineColorAndroid="transparent"
+          style={[styles.searchInput, { color: colors.text }, searchInputWebUnsetOutline]}
           returnKeyType="search"
           clearButtonMode="while-editing"
           autoCorrect={false}
@@ -189,6 +197,16 @@ export function TransactionFilters({
     </View>
   );
 }
+
+/** Chromium `:focus-visible` default ring on `<input>` (RN Web maps TextInput → input). */
+const searchInputWebUnsetOutline =
+  Platform.OS === 'web'
+    ? ({
+        outlineWidth: 0,
+        outlineStyle: 'none',
+        boxShadow: 'none',
+      } as unknown as TextStyle)
+    : undefined;
 
 const styles = StyleSheet.create({
   container: {

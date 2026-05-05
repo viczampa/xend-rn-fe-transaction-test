@@ -1,8 +1,7 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useLayoutEffect } from 'react';
 import {
   FlatList,
   View,
-  Text,
   ActivityIndicator,
   RefreshControl,
   StyleSheet,
@@ -22,8 +21,7 @@ import type { Transaction, SortOrder } from './types';
 
 export function TransactionList() {
   const { colors } = useTheme();
-  const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const selectedRef = useRef<Transaction | null>(null);
+  const bottomSheetRef = useRef<BottomSheetModal | null>(null);
   const [selectedTx, setSelectedTx] = React.useState<Transaction | null>(null);
 
   const {
@@ -56,9 +54,16 @@ export function TransactionList() {
 
   const handleRowPress = useCallback((t: Transaction) => {
     setSelectedTx(t);
-    selectedRef.current = t;
-    bottomSheetRef.current?.present();
   }, []);
+
+  const handleSheetDismiss = useCallback(() => {
+    setSelectedTx(null);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (selectedTx === null) return;
+    bottomSheetRef.current?.present();
+  }, [selectedTx]);
 
   const handleEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) fetchNextPage();
@@ -82,26 +87,23 @@ export function TransactionList() {
     [colors.border],
   );
 
-  const ListHeader = useCallback(
-    () => (
-      <TransactionFilters
-        search={filters.search}
-        assetFilter={filters.assetFilter}
-        typeFilter={filters.typeFilter}
-        sortBy={filters.sortBy}
-        sortOrder={filters.sortOrder}
-        availableAssets={uniqueAssets}
-        onSearchChange={setSearch}
-        onAssetChange={setAssetFilter}
-        onTypeChange={setTypeFilter}
-        onSortByChange={setSortBy}
-        onSortOrderToggle={toggleSortOrder}
-        onReset={resetFilters}
-        hasActiveFilters={hasActiveFilters}
-      />
-    ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filters, uniqueAssets, hasActiveFilters],
+  /** Outside FlatList: ListHeader identity changes removed the mounted TextInput and dismissed the keyboard on each keystroke. */
+  const filtersHeader = (
+    <TransactionFilters
+      search={filters.search}
+      assetFilter={filters.assetFilter}
+      typeFilter={filters.typeFilter}
+      sortBy={filters.sortBy}
+      sortOrder={filters.sortOrder}
+      availableAssets={uniqueAssets}
+      onSearchChange={setSearch}
+      onAssetChange={setAssetFilter}
+      onTypeChange={setTypeFilter}
+      onSortByChange={setSortBy}
+      onSortOrderToggle={toggleSortOrder}
+      onReset={resetFilters}
+      hasActiveFilters={hasActiveFilters}
+    />
   );
 
   const ListEmpty = useCallback(() => {
@@ -144,8 +146,8 @@ export function TransactionList() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
-        <ListHeader />
+      <View style={[styles.outer, { backgroundColor: colors.background }]}>
+        {filtersHeader}
         <TransactionSkeleton count={8} />
       </View>
     );
@@ -153,38 +155,51 @@ export function TransactionList() {
 
   return (
     <>
-      <FlatList
-        data={transactions}
-        keyExtractor={keyExtractor}
-        renderItem={renderItem}
-        ListHeaderComponent={ListHeader}
-        ListEmptyComponent={ListEmpty}
-        ListFooterComponent={ListFooter}
-        ItemSeparatorComponent={ItemSeparator}
-        onEndReached={handleEndReached}
-        onEndReachedThreshold={0.25}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching && !isLoading}
-            onRefresh={refetch}
-            tintColor={brand.secondary}
-            colors={[brand.secondary]}
-          />
-        }
-        style={{ backgroundColor: colors.background }}
-        contentContainerStyle={transactions.length === 0 ? styles.emptyContent : undefined}
-        initialNumToRender={12}
-        maxToRenderPerBatch={12}
-        windowSize={5}
-        removeClippedSubviews
-      />
+      <View style={[styles.outer, { backgroundColor: colors.background }]}>
+        {filtersHeader}
+        <FlatList
+          data={transactions}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
+          ListEmptyComponent={ListEmpty}
+          ListFooterComponent={ListFooter}
+          ItemSeparatorComponent={ItemSeparator}
+          keyboardShouldPersistTaps="always"
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.25}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching && !isLoading}
+              onRefresh={refetch}
+              tintColor={brand.secondary}
+              colors={[brand.secondary]}
+            />
+          }
+          style={styles.flatList}
+          contentContainerStyle={transactions.length === 0 ? styles.emptyContent : undefined}
+          initialNumToRender={12}
+          maxToRenderPerBatch={12}
+          windowSize={5}
+          removeClippedSubviews
+        />
+      </View>
 
-      <TransactionDetails bottomSheetRef={bottomSheetRef} transaction={selectedTx} />
+      <TransactionDetails
+        bottomSheetRef={bottomSheetRef}
+        transaction={selectedTx}
+        onDismiss={handleSheetDismiss}
+      />
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  outer: {
+    flex: 1,
+  },
+  flatList: {
+    flex: 1,
+  },
   divider: {
     height: StyleSheet.hairlineWidth,
     marginHorizontal: 16,

@@ -8,7 +8,7 @@ A small fintech-style **Transactions List** built with **React Native + Expo + T
 
 ## TL;DR — "Just execute this project"
 
-Pick the block that matches your OS, **paste it as-is** into a terminal. It installs every prerequisite (Node, npm, Watchman, Git), clones the repo, sets up `.env`, installs all JS dependencies (which include Expo SDK 52 and React Native 0.76), and starts the dev server.
+Pick the block that matches your OS, **paste it as-is** into a terminal. It installs every prerequisite (Node, npm, Watchman, Git), clones the repo, sets up `.env`, installs all JS dependencies (which include Expo SDK 54 and React Native 0.81), and starts the dev server.
 
 > Replace `REPO_URL` once at the top of the block — that's the only edit you need.
 
@@ -22,9 +22,9 @@ Pick the block that matches your OS, **paste it as-is** into a terminal. It inst
 | npm                 | bundled with Node 20          | —                                       |
 | Watchman            | latest                        | Homebrew (macOS) / apt (Linux) — optional on Windows |
 | Git                 | latest                        | Homebrew / apt / winget                 |
-| Expo SDK            | **52.x**                      | `package.json` → `npm install`          |
-| React Native        | **0.76.x**                    | pinned by Expo SDK 52                   |
-| React               | **18.3.x**                    | `package.json`                          |
+| Expo SDK            | **54.x**                      | `package.json` → `npm install`          |
+| React Native        | **0.81.x**                    | pinned by Expo SDK 54                   |
+| React               | **19.1.x**                    | `package.json`                          |
 | TypeScript          | **5.x**                       | `package.json`                          |
 | Expo CLI            | invoked via `npx expo …`      | no global install needed                |
 
@@ -68,7 +68,7 @@ cd xend-rn-fe-transaction-test
 # 5. Set up environment file
 [ -f .env ] || cp .env.example .env
 
-# 6. Install JS dependencies (pulls Expo SDK 52, React Native 0.76, etc.)
+# 6. Install JS dependencies (pulls Expo SDK 54, React Native 0.81, etc.)
 npm install
 
 # 7. Start the dev server
@@ -110,7 +110,7 @@ cd xend-rn-fe-transaction-test
 # 5. Set up environment file
 [ -f .env ] || cp .env.example .env
 
-# 6. Install JS dependencies (pulls Expo SDK 52, React Native 0.76, etc.)
+# 6. Install JS dependencies (pulls Expo SDK 54, React Native 0.81, etc.)
 npm install
 
 # 7. Start the dev server
@@ -145,7 +145,7 @@ Set-Location xend-rn-fe-transaction-test
 # 4. Set up environment file
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 
-# 5. Install JS dependencies (pulls Expo SDK 52, React Native 0.76, etc.)
+# 5. Install JS dependencies (pulls Expo SDK 54, React Native 0.81, etc.)
 npm install
 
 # 6. Start the dev server
@@ -165,7 +165,17 @@ A QR code will appear in the terminal. From here you can:
 - Press **`a`** to launch an Android emulator (Android Studio required).
 - Press **`w`** to launch the web preview.
 
-Then log in. The login screen pre-fills the test credentials from `.env`. Tap **Sign in** and you should land on the **Transactions** list.
+**After the app opens** (Expo Go, emulator, simulator, or web): the login screen pre-fills the test credentials from `.env`. Tap **Sign in** and you should land on the **Transactions** list.
+
+### Opening the app on a real phone with **Expo Go**
+
+If Metro shows a LAN URL (for example inside **WSL2** or odd Wi‑Fi routing), your phone often **cannot reach** that address. For **Expo Go** on your phone, run the dev server in **tunnel** mode so the QR code loads the bundle over the internet:
+
+```bash
+npm run start:tunnel
+```
+
+This is equivalent to `expo start --tunnel`. Then scan the QR code shown in the terminal with **Expo Go** and sign in as above.
 
 ---
 
@@ -189,7 +199,8 @@ The app reads its base URL and test credentials from `.env` (git-ignored). The `
 ```bash
 npx expo start            # start dev server
 npx expo start --clear    # start dev server, clearing Metro cache
-npx expo start --tunnel   # use a tunnel (useful on restrictive networks)
+npm run start:tunnel      # tunnel mode — required for many phones when using Expo Go (e.g. WSL2); same as expo start --tunnel
+npx expo start --tunnel   # same as npm run start:tunnel
 npx expo run:ios          # build & run on iOS simulator (requires prebuild)
 npx expo run:android      # build & run on Android emulator (requires prebuild)
 npm run typecheck         # if a tsc script is configured

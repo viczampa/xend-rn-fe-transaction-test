@@ -24,7 +24,10 @@ export const lightColors = {
   skeletonHighlight: 'rgba(62, 65, 70, 0.16)',
 } as const;
 
-export const darkColors: typeof lightColors = {
+/** Widen from `lightColors` literals so dark palette can use distinct hex values (TS 5.9+). */
+export type ThemeColors = { [K in keyof typeof lightColors]: string };
+
+export const darkColors: ThemeColors = {
   ...brand,
   background: '#0F0F0F',
   surface: '#1A1A1A',
@@ -44,5 +47,3 @@ export const darkColors: typeof lightColors = {
   skeleton: 'rgba(255, 255, 255, 0.06)',
   skeletonHighlight: 'rgba(255, 255, 255, 0.12)',
 };
-
-export type ThemeColors = typeof lightColors;

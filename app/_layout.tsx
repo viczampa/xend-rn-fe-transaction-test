@@ -11,8 +11,9 @@ import {
   Lato_700Bold,
   Lato_900Black,
 } from '@expo-google-fonts/lato';
-import { useColorScheme } from 'react-native';
 import { AuthProvider } from '@/src/features/auth/AuthProvider';
+import { ThemePreferenceProvider, useThemePreference } from '@/src/theme';
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,22 +24,34 @@ const queryClient = new QueryClient({
   },
 });
 
+function RootChrome({ children }: { children: React.ReactNode }) {
+  const { isDark } = useThemePreference();
+  return (
+    <>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      {children}
+    </>
+  );
+}
+
 export default function RootLayout() {
-  const scheme = useColorScheme();
   const [fontsLoaded] = useFonts({ Lato_400Regular, Lato_700Bold, Lato_900Black });
 
   if (!fontsLoaded) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <BottomSheetModalProvider>
-            <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-            <Stack screenOptions={{ headerShown: false }} />
-          </BottomSheetModalProvider>
-        </AuthProvider>
-      </QueryClientProvider>
+      <ThemePreferenceProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <BottomSheetModalProvider>
+              <RootChrome>
+                <Stack screenOptions={{ headerShown: false }} />
+              </RootChrome>
+            </BottomSheetModalProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemePreferenceProvider>
     </GestureHandlerRootView>
   );
 }

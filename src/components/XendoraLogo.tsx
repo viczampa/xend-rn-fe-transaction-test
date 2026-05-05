@@ -1,33 +1,33 @@
 import React from 'react';
-import { Text, View, StyleSheet } from 'react-native';
-import { brand } from '@/src/theme/colors';
+import { View, StyleSheet } from 'react-native';
+import { SvgXml } from 'react-native-svg';
+import {
+  xendoraLogoHorizontalXmlDarkUi,
+  xendoraLogoHorizontalXmlLightUi,
+} from '@/src/assets/xendoraLogoHorizontalXml';
+import { useTheme } from '@/src/theme';
 
-/**
- * Replace the Text fallback with an <Image> once the PNG asset is saved at
- * assets/logo/xendora-logo-horizontal.png
- *
- * Example:
- *   import Logo from '@/assets/logo/xendora-logo-horizontal.png';
- *   <Image source={Logo} style={{ height, width: height * aspectRatio }} resizeMode="contain" />
- */
+/** Matches `viewBox="0 0 2000 573.12"` in the SVG */
+const VIEWBOX_RATIO = 2000 / 573.12;
+
 interface Props {
   height?: number;
+  /** Kept for API compatibility; fills come from theme-specific SVG variants */
   color?: string;
 }
 
-export function XendoraLogo({ height = 24, color }: Props) {
+export function XendoraLogo({ height = 24 }: Props) {
+  const { isDark } = useTheme();
+  const xml = isDark ? xendoraLogoHorizontalXmlDarkUi : xendoraLogoHorizontalXmlLightUi;
+  const width = height * VIEWBOX_RATIO;
+
   return (
-    <View style={[styles.container, { height }]}>
-      <Text
-        style={[
-          styles.wordmark,
-          { fontSize: height * 0.72, color: color ?? brand.secondary },
-        ]}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-      >
-        XENDORA
-      </Text>
+    <View
+      style={[styles.container, { height, width }]}
+      accessibilityRole="image"
+      accessibilityLabel="Xendora"
+    >
+      <SvgXml key={isDark ? 'dark-ui' : 'light-ui'} xml={xml} width={width} height={height} />
     </View>
   );
 }
@@ -35,9 +35,5 @@ export function XendoraLogo({ height = 24, color }: Props) {
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
-  },
-  wordmark: {
-    fontFamily: 'Lato_900Black',
-    letterSpacing: 1.2,
   },
 });

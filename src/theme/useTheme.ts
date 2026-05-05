@@ -1,5 +1,5 @@
-import { useColorScheme } from 'react-native';
 import { lightColors, darkColors, type ThemeColors } from './colors';
+import { useThemePreference } from './ThemePreferenceProvider';
 
 const spacing = {
   xs: 4,
@@ -23,15 +23,17 @@ export type Theme = {
   spacing: typeof spacing;
   radius: typeof radius;
   isDark: boolean;
+  /** Persisted light/dark choice for menus / settings. */
+  setAppearance: (mode: 'light' | 'dark') => void;
 };
 
 export function useTheme(): Theme {
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
+  const { isDark, setAppearance } = useThemePreference();
   return {
     colors: isDark ? darkColors : lightColors,
     spacing,
     radius,
     isDark,
+    setAppearance,
   };
 }

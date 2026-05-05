@@ -21,8 +21,8 @@ export function formatAmount(
   if (!Number.isFinite(num)) return dash;
 
   const upper = upperFallback || 'UNK';
-  const isFiat = ['USD', 'EUR', 'GBP', 'BRL'].includes(upper);
-  const decimals = isFiat ? 2 : Math.min(6, countSignificantDecimals(num));
+  const useTwoDecimals = ['USD', 'EUR', 'GBP', 'BRL', 'USDC', 'USDT'].includes(upper);
+  const decimals = useTwoDecimals ? 2 : Math.min(6, countSignificantDecimals(num));
   const formatted = num.toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
@@ -69,10 +69,17 @@ export function formatRelativeDate(iso: string): string {
   return formatDate(iso);
 }
 
-export function shortenHash(hash: string | null | undefined, chars = 8): string {
-  if (!hash) return '—';
-  if (hash.length <= chars * 2 + 2) return hash;
-  return `${hash.slice(0, chars)}…${hash.slice(-chars)}`;
+export function shortenHash(hash: string | null | undefined | unknown, chars = 8): string {
+  if (hash == null || hash === '') return '—';
+  const str =
+    typeof hash === 'string'
+      ? hash
+      : typeof hash === 'number' || typeof hash === 'bigint'
+        ? String(hash)
+        : null;
+  if (str === null) return '—';
+  if (str.length <= chars * 2 + 2) return str;
+  return `${str.slice(0, chars)}…${str.slice(-chars)}`;
 }
 
 export function capitalise(s: string): string {
