@@ -18,6 +18,7 @@ describe('useFilters', () => {
     expect(result.current.filters.search).toBe('');
     expect(result.current.filters.assetFilter).toBeUndefined();
     expect(result.current.filters.typeFilter).toBeUndefined();
+    expect(result.current.filters.statusFilter).toBeUndefined();
     expect(result.current.filters.sortBy).toBe('date');
     expect(result.current.filters.sortOrder).toBe('desc');
   });
@@ -32,6 +33,18 @@ describe('useFilters', () => {
     const { result } = renderHook(() => useFilters());
     act(() => result.current.setAssetFilter('USDC'));
     expect(result.current.filters.assetFilter).toBe('USDC');
+  });
+
+  it('updates status filter', () => {
+    const { result } = renderHook(() => useFilters());
+    act(() => result.current.setStatusFilter('COMPLETED'));
+    expect(result.current.filters.statusFilter).toBe('COMPLETED');
+  });
+
+  it('reports hasActiveFilters when status filter is set', () => {
+    const { result } = renderHook(() => useFilters());
+    act(() => result.current.setStatusFilter('PENDING'));
+    expect(result.current.hasActiveFilters).toBe(true);
   });
 
   it('updates type filter', () => {
@@ -59,11 +72,13 @@ describe('useFilters', () => {
       result.current.setSearch('test');
       result.current.setAssetFilter('EUR');
       result.current.setTypeFilter('WITHDRAWAL');
+      result.current.setStatusFilter('COMPLETED');
     });
     act(() => result.current.resetFilters());
     expect(result.current.filters.search).toBe('');
     expect(result.current.filters.assetFilter).toBeUndefined();
     expect(result.current.filters.typeFilter).toBeUndefined();
+    expect(result.current.filters.statusFilter).toBeUndefined();
     expect(result.current.hasActiveFilters).toBe(false);
   });
 

@@ -38,19 +38,27 @@ Padronizei as cores / tipografia como base do site da xendora.
 
 Utilizei o stylesheet padrão do react native por uma abordagem de sempre tentar utilizar as libs nativas e evitar importar muitas ferramentas e libs desconhecidas. Abaixo uma lista das libs utilizadas para cada arquivo do projeto
 
+`theme/colors.ts` -> armazena todas as cores da aplicação e dos temas dark / light 
+
+
 | `app/` | Routes: auth gate, login, main shell |
 | `src/api/` | Axios client, `Bearer` injection, React Query keys, `GET /transactions` wrapper |
 | `src/features/auth/` | Login + `AuthProvider`; token in **Secure Store** (native) / AsyncStorage (web) |
-| `src/features/transactions/` | List, filters, row, **`@gorhom/bottom-sheet`** details, pure filter/sort helpers |
+| `src/features/transactions/` | **`@gorhom/bottom-sheet`** 
 | `src/components/` | Shared UI (header, badges, empty state, logo) |
 | `src/theme/` | Colors, typography (**Lato**), light/dark |
 
 **Escolhas das bibliotecas e o porque**
 
 - **TanStack React Query** — `useInfiniteQuery` pra paginação -> eu não conhecia o react query, porém ele realmente 'revolucionou' o front-end, que antigamente era tudo com; useEffect, useState / isLoading / isError, com ele a gente reduz o nível de requisição e além de armazenar em cache 'Persisters'
+
  - **Context** — utilizei para guardar os dados do tema e o token, como já dito acima, não julguei necessário o redux pra armazenar essas informações dado a simplicidade delas ( estilo e token auth )
-- **`StyleSheet`** — utilizei a lib padrão do react native `src/theme/`.
-- **Client-side search/filters** — sobre os filtros 
+
+- **StyleSheet** — utilizei a lib padrão do react native `src/theme/`.
+
+- **Client-side search/filters** - para a busca via text input, devido a quantidade reduzida de transações optei for fazer 100% clientside utilizando 'filtes.search.trim' nativo ( filterTransactionsLocal ), me questionei sobre a performance dessa abordagem em uma massa de dado maior, provavelmente seguiria com a abordagem server-side. No caso do teste, pra filtrar 'type' seria basicamente impossível utilizar server-side, dado que não temos o filtro por type, sendo assim o único caminho foi via client-side, no entanto, analisando a documentação, encontrei o filtro 'status' que não faz jus a uma das tarefas do teste, mas implementei um exemplo de filtro por status se utilizando de um request server-side para apresentar minha abordagem de um filtro não apenas na chama inicial para fazer o load do cache da aplicação, mas também um segundo exemplo de requisição ao server por filter, que seria idêntico para lidar com ASSET ou TYPE
+
+- **Considerações sobre server/client side filters** - também senti falta de uma lista base de todos os assets / types, dado isso criei uma lista code-embeded, que geraria manutenção constante não escalável conforme evolução de moedas e pares, isso seria ou implementado como filtro da lista de transactions ( abordagem type ) / ou criaria um documento no próprio front / documentação base da xendora com os pares/tipos aceitos )
 
 ---
 

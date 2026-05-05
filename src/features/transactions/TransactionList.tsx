@@ -29,6 +29,7 @@ export function TransactionList() {
     setSearch,
     setAssetFilter,
     setTypeFilter,
+    setStatusFilter,
     setSortBy,
     setSortOrder,
     resetFilters,
@@ -93,12 +94,14 @@ export function TransactionList() {
       search={filters.search}
       assetFilter={filters.assetFilter}
       typeFilter={filters.typeFilter}
+      statusFilter={filters.statusFilter}
       sortBy={filters.sortBy}
       sortOrder={filters.sortOrder}
       availableAssets={uniqueAssets}
       onSearchChange={setSearch}
       onAssetChange={setAssetFilter}
       onTypeChange={setTypeFilter}
+      onStatusChange={setStatusFilter}
       onSortByChange={setSortBy}
       onSortOrderToggle={toggleSortOrder}
       onReset={resetFilters}

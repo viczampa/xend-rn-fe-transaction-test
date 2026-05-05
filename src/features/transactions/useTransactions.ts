@@ -48,7 +48,7 @@ function needsMorePages(data: InfiniteData<TransactionsResponse> | undefined): b
 
 export function useTransactions(filters: TransactionFilters) {
   const queryClient = useQueryClient();
-  const queryKey = queryKeys.transactions.list;
+  const queryKey = queryKeys.transactions.list(filters.statusFilter);
 
   const query = useInfiniteQuery({
     queryKey,
@@ -56,6 +56,7 @@ export function useTransactions(filters: TransactionFilters) {
       fetchTransactions({
         page: pageParam as number,
         pageSize: TRANSACTIONS_PAGE_SIZE,
+        ...(filters.statusFilter ? { status: filters.statusFilter } : {}),
       }),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) =>

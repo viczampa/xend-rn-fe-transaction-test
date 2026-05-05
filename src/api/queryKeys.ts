@@ -4,7 +4,7 @@ export const queryKeys = {
   },
   transactions: {
     all: ['transactions'] as const,
-    /** List cache is independent of UI filters — we always paginate the full API slice. */
-    list: ['transactions', 'list'] as const,
+    /** Infinite list cache; `status` changes the wire query so it must be part of the key. */
+    list: (status?: string | null) => ['transactions', 'list', status ?? 'all'] as const,
   },
 } as const;

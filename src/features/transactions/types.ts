@@ -1,5 +1,26 @@
 export type TransactionType = 'WITHDRAWAL' | 'DEPOSIT' | 'EXCHANGE';
-export type TransactionStatus = 'COMPLETED' | 'PENDING' | 'FAILED' | 'PROCESSING' | 'RETURNED';
+
+/** Values accepted by `GET /transactions?status=` (unified list). */
+export type TransactionApiStatus =
+  | 'CREATED'
+  | 'PENDING'
+  | 'AWAITING_FUNDS'
+  | 'IN_REVIEW'
+  | 'FUNDS_RECEIVED'
+  | 'PENDING_APPROVAL'
+  | 'SUBMITTED'
+  | 'PROCESSING'
+  | 'COMPLETED'
+  | 'RETURNED'
+  | 'REFUNDED'
+  | 'FAILED'
+  | 'COMPLIANCE_REJECTED'
+  | 'UNDELIVERABLE'
+  | 'MISSING_RETURN_POLICY'
+  | 'CANCELED';
+
+/** Row / badge uses the same vocabulary the API returns. */
+export type TransactionStatus = TransactionApiStatus;
 export type TransactionRail = 'SEPA' | 'ACH' | 'WIRE' | 'CRYPTO' | string;
 
 export interface TransactionAddress {
@@ -111,6 +132,8 @@ export interface TransactionFilters {
   search: string;
   assetFilter: string | undefined;
   typeFilter: TransactionType | undefined;
+  /** Sent as `status` on `GET /transactions` when set; server narrows results. */
+  statusFilter: TransactionApiStatus | undefined;
   sortBy: SortField;
   sortOrder: SortOrder;
 }

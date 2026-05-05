@@ -1,17 +1,28 @@
 import { apiClient } from './client';
-import type { Transaction, TransactionsResponse } from '@/src/features/transactions/types';
+import type {
+  Transaction,
+  TransactionApiStatus,
+  TransactionsResponse,
+} from '@/src/features/transactions/types';
 
 export interface FetchTransactionsParams {
   page: number;
   pageSize: number;
+  /** When set, sent as `status` (server-side filter). */
+  status?: TransactionApiStatus;
 }
 
-/** Paginated fetch only — filters/sort are applied in `useTransactions` (API rejects extra params). */
+/** Paginated fetch; optional `status` is applied on the server. Search/asset/type/sort stay client-side. */
 export async function fetchTransactions(
   params: FetchTransactionsParams,
 ): Promise<TransactionsResponse> {
+  const { page, pageSize, status } = params;
   const { data } = await apiClient.get<TransactionsResponse>('/transactions', {
-    params: { page: params.page, pageSize: params.pageSize },
+    params: {
+      page,
+      pageSize,
+      ...(status ? { status } : {}),
+    },
   });
 
   // Normalise: the API might return just an array or a wrapped object

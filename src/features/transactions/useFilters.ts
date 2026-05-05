@@ -1,12 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getItem, setItem } from '@/src/utils/storage';
-import type { TransactionFilters, TransactionType, SortField, SortOrder } from './types';
+import type {
+  TransactionFilters,
+  TransactionType,
+  TransactionApiStatus,
+  SortField,
+  SortOrder,
+} from './types';
 
 const STORAGE_KEY = '@xendora/transaction-filters';
 
 interface PersistedFilters {
   assetFilter?: string;
   typeFilter?: TransactionType;
+  statusFilter?: TransactionApiStatus;
   sortBy: SortField;
   sortOrder: SortOrder;
 }
@@ -15,6 +22,7 @@ const DEFAULT_FILTERS: TransactionFilters = {
   search: '',
   assetFilter: undefined,
   typeFilter: undefined,
+  statusFilter: undefined,
   sortBy: 'date',
   sortOrder: 'desc',
 };
@@ -31,6 +39,7 @@ export function useFilters() {
         ...f,
         assetFilter: saved.assetFilter,
         typeFilter: saved.typeFilter,
+        statusFilter: saved.statusFilter,
         sortBy: saved.sortBy ?? f.sortBy,
         sortOrder: saved.sortOrder ?? f.sortOrder,
       }));
@@ -44,6 +53,7 @@ export function useFilters() {
       setItem<PersistedFilters>(STORAGE_KEY, {
         assetFilter: next.assetFilter,
         typeFilter: next.typeFilter,
+        statusFilter: next.statusFilter,
         sortBy: next.sortBy,
         sortOrder: next.sortOrder,
       });
@@ -69,6 +79,17 @@ export function useFilters() {
     (typeFilter: TransactionType | undefined) => {
       setFilters((f) => {
         const next = { ...f, typeFilter };
+        persistFilters(next);
+        return next;
+      });
+    },
+    [persistFilters],
+  );
+
+  const setStatusFilter = useCallback(
+    (statusFilter: TransactionApiStatus | undefined) => {
+      setFilters((f) => {
+        const next = { ...f, statusFilter };
         persistFilters(next);
         return next;
       });
@@ -107,13 +128,17 @@ export function useFilters() {
   }, []);
 
   const hasActiveFilters =
-    !!filters.search || !!filters.assetFilter || !!filters.typeFilter;
+    !!filters.search ||
+    !!filters.assetFilter ||
+    !!filters.typeFilter ||
+    !!filters.statusFilter;
 
   return {
     filters,
     setSearch,
     setAssetFilter,
     setTypeFilter,
+    setStatusFilter,
     setSortBy,
     setSortOrder,
     resetFilters,

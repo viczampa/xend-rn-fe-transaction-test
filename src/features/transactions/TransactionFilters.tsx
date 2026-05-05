@@ -12,7 +12,12 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '@/src/theme';
 import { brand } from '@/src/theme/colors';
-import type { TransactionType, SortField, SortOrder } from './types';
+import type {
+  TransactionType,
+  TransactionApiStatus,
+  SortField,
+  SortOrder,
+} from './types';
 
 /** Status / type labels aligned with challenge copy (Withdrawal, Deposit, Exchange). */
 const TYPE_OPTIONS: { label: string; value: TransactionType | undefined }[] = [
@@ -22,18 +27,51 @@ const TYPE_OPTIONS: { label: string; value: TransactionType | undefined }[] = [
   { label: 'Exchange', value: 'EXCHANGE' },
 ];
 
-type Expanded = 'asset' | 'type' | null;
+const API_STATUS_VALUES: TransactionApiStatus[] = [
+  'CREATED',
+  'PENDING',
+  'AWAITING_FUNDS',
+  'IN_REVIEW',
+  'FUNDS_RECEIVED',
+  'PENDING_APPROVAL',
+  'SUBMITTED',
+  'PROCESSING',
+  'COMPLETED',
+  'RETURNED',
+  'REFUNDED',
+  'FAILED',
+  'COMPLIANCE_REJECTED',
+  'UNDELIVERABLE',
+  'MISSING_RETURN_POLICY',
+  'CANCELED',
+];
+
+function titleCaseStatusEnum(value: string): string {
+  return value
+    .split('_')
+    .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
+const STATUS_OPTIONS: { label: string; value: TransactionApiStatus | undefined }[] = [
+  { label: 'All statuses', value: undefined },
+  ...API_STATUS_VALUES.map((value) => ({ label: titleCaseStatusEnum(value), value })),
+];
+
+type Expanded = 'asset' | 'type' | 'status' | null;
 
 interface Props {
   search: string;
   assetFilter: string | undefined;
   typeFilter: TransactionType | undefined;
+  statusFilter: TransactionApiStatus | undefined;
   sortBy: SortField;
   sortOrder: SortOrder;
   availableAssets: string[];
   onSearchChange: (v: string) => void;
   onAssetChange: (v: string | undefined) => void;
   onTypeChange: (v: TransactionType | undefined) => void;
+  onStatusChange: (v: TransactionApiStatus | undefined) => void;
   onSortByChange: (v: SortField) => void;
   onSortOrderToggle: () => void;
   onReset: () => void;
@@ -139,12 +177,14 @@ export function TransactionFilters({
   search,
   assetFilter,
   typeFilter,
+  statusFilter,
   sortBy,
   sortOrder,
   availableAssets,
   onSearchChange,
   onAssetChange,
   onTypeChange,
+  onStatusChange,
   onSortByChange,
   onSortOrderToggle,
   onReset,
@@ -161,6 +201,8 @@ export function TransactionFilters({
   const assetSummary = assetFilter ?? 'All assets';
   const typeSummary =
     TYPE_OPTIONS.find((o) => o.value === typeFilter)?.label ?? TYPE_OPTIONS[0].label;
+  const statusSummary =
+    STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label ?? STATUS_OPTIONS[0].label;
 
   const overlayMenuOpen = expanded !== null;
 
@@ -268,6 +310,33 @@ export function TransactionFilters({
                 showDividerBelow={i < TYPE_OPTIONS.length - 1}
                 onSelect={() => {
                   onTypeChange(opt.value);
+                  setExpanded(null);
+                }}
+              />
+            ))}
+          </ScrollView>
+        </FilterDropdown>
+
+        <FilterDropdown
+          expanded={expanded}
+          dropdownId="status"
+          onToggle={() => toggleExpanded('status')}
+          triggerLabel="Status"
+          valueLabel={statusSummary}
+        >
+          <ScrollView
+            nestedScrollEnabled
+            style={styles.dropdownScroll}
+            keyboardShouldPersistTaps="handled"
+          >
+            {STATUS_OPTIONS.map((opt, i) => (
+              <DropdownOption
+                key={`${opt.label}-${opt.value ?? 'all'}`}
+                label={opt.label}
+                selected={statusFilter === opt.value}
+                showDividerBelow={i < STATUS_OPTIONS.length - 1}
+                onSelect={() => {
+                  onStatusChange(opt.value);
                   setExpanded(null);
                 }}
               />
