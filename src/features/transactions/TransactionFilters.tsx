@@ -3,10 +3,10 @@ import {
   View,
   Text,
   TextInput,
-  ScrollView,
   Pressable,
   StyleSheet,
   Platform,
+  ScrollView,
   type TextStyle,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -14,12 +14,15 @@ import { useTheme } from '@/src/theme';
 import { brand } from '@/src/theme/colors';
 import type { TransactionType, SortField, SortOrder } from './types';
 
+/** Status / type labels aligned with challenge copy (Withdrawal, Deposit, Exchange). */
 const TYPE_OPTIONS: { label: string; value: TransactionType | undefined }[] = [
-  { label: 'All', value: undefined },
-  { label: 'Send', value: 'WITHDRAWAL' },
-  { label: 'Receive', value: 'DEPOSIT' },
-  { label: 'Swap', value: 'EXCHANGE' },
+  { label: 'All types', value: undefined },
+  { label: 'Withdrawal', value: 'WITHDRAWAL' },
+  { label: 'Deposit', value: 'DEPOSIT' },
+  { label: 'Exchange', value: 'EXCHANGE' },
 ];
+
+type Expanded = 'asset' | 'type' | null;
 
 interface Props {
   search: string;
@@ -37,36 +40,98 @@ interface Props {
   hasActiveFilters: boolean;
 }
 
-function Chip({
+function DropdownOption({
   label,
-  active,
-  onPress,
+  selected,
+  onSelect,
+  showDividerBelow,
 }: {
   label: string;
-  active: boolean;
-  onPress: () => void;
+  selected: boolean;
+  onSelect: () => void;
+  showDividerBelow?: boolean;
 }) {
   const { colors } = useTheme();
   return (
     <Pressable
-      onPress={onPress}
-      style={[
-        styles.chip,
+      onPress={onSelect}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      accessibilityLabel={label}
+      style={({ pressed }) => [
+        styles.dropdownOption,
+        showDividerBelow && { borderBottomColor: colors.border },
+        !showDividerBelow && styles.dropdownOptionLast,
         {
-          backgroundColor: active ? brand.secondary : colors.surface,
-          borderColor: active ? brand.secondary : colors.border,
+          backgroundColor:
+            selected ? `${brand.secondary}18` : pressed ? `${colors.border}66` : 'transparent',
         },
       ]}
     >
       <Text
         style={[
-          styles.chipLabel,
-          { color: active ? '#FFFFFF' : colors.textSubtle },
+          styles.dropdownOptionLabel,
+          { color: selected ? colors.text : colors.textSubtle },
         ]}
       >
         {label}
       </Text>
+      {selected && <Feather name="check" size={18} color={brand.secondary} />}
     </Pressable>
+  );
+}
+
+function FilterDropdown({
+  expanded,
+  dropdownId,
+  onToggle,
+  triggerLabel,
+  valueLabel,
+  children,
+}: {
+  expanded: Expanded;
+  dropdownId: Exclude<Expanded, null>;
+  onToggle: () => void;
+  triggerLabel: string;
+  valueLabel: string;
+  children: React.ReactNode;
+}) {
+  const { colors } = useTheme();
+  const open = expanded === dropdownId;
+  const a11yValue = `${triggerLabel}: ${valueLabel}${open ? ', menu expanded' : ', menu collapsed'}`;
+  return (
+    <View style={[styles.dropdownBlock, open && styles.dropdownBlockOpen]}>
+      <Pressable
+        onPress={onToggle}
+        style={[
+          styles.dropdownTrigger,
+          {
+            borderColor: open ? colors.textSubtle : colors.border,
+            backgroundColor: colors.surface,
+          },
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={a11yValue}
+        accessibilityState={{ expanded: open }}
+      >
+        <View style={styles.dropdownTriggerTexts}>
+          <Text style={[styles.dropdownMeta, { color: colors.textMuted }]}>{triggerLabel}</Text>
+          <Text style={[styles.dropdownValue, { color: colors.text }]} numberOfLines={1}>
+            {valueLabel}
+          </Text>
+        </View>
+        <Feather
+          name={open ? 'chevron-up' : 'chevron-down'}
+          size={20}
+          color={colors.textSubtle}
+        />
+      </Pressable>
+      {open && (
+        <View style={[styles.dropdownPanel, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+          {children}
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -87,19 +152,29 @@ export function TransactionFilters({
 }: Props) {
   const { colors, spacing } = useTheme();
   const [searchFocused, setSearchFocused] = useState(false);
+  const [expanded, setExpanded] = useState<Expanded>(null);
 
-  const handleAssetPress = useCallback(
-    (asset: string | undefined) => {
-      onAssetChange(assetFilter === asset ? undefined : asset);
-    },
-    [assetFilter, onAssetChange],
-  );
+  const toggleExpanded = useCallback((id: Exclude<Expanded, null>) => {
+    setExpanded((e) => (e === id ? null : id));
+  }, []);
+
+  const assetSummary = assetFilter ?? 'All assets';
+  const typeSummary =
+    TYPE_OPTIONS.find((o) => o.value === typeFilter)?.label ?? TYPE_OPTIONS[0].label;
+
+  const overlayMenuOpen = expanded !== null;
 
   const sortIcon: React.ComponentProps<typeof Feather>['name'] =
     sortOrder === 'asc' ? 'arrow-up' : 'arrow-down';
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.background },
+        overlayMenuOpen && styles.containerFloating,
+      ]}
+    >
       {/* Search bar */}
       <View
         style={[
@@ -135,33 +210,71 @@ export function TransactionFilters({
         )}
       </View>
 
-      {/* Type filter pills */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={[styles.chipRow, { paddingHorizontal: spacing.md }]}
-      >
-        {TYPE_OPTIONS.map((opt) => (
-          <Chip
-            key={opt.label}
-            label={opt.label}
-            active={typeFilter === opt.value}
-            onPress={() => onTypeChange(opt.value)}
-          />
-        ))}
+      {/* Filter dropdowns */}
+      <View style={[styles.dropdownsRow, { paddingHorizontal: spacing.md, gap: 10 }]}>
+        <FilterDropdown
+          expanded={expanded}
+          dropdownId="asset"
+          onToggle={() => toggleExpanded('asset')}
+          triggerLabel="Asset"
+          valueLabel={assetSummary}
+        >
+          <ScrollView
+            nestedScrollEnabled
+            style={styles.dropdownScroll}
+            keyboardShouldPersistTaps="handled"
+          >
+            <DropdownOption
+              label="All assets"
+              selected={!assetFilter}
+              showDividerBelow={availableAssets.length > 0}
+              onSelect={() => {
+                onAssetChange(undefined);
+                setExpanded(null);
+              }}
+            />
+            {availableAssets.map((asset, i) => (
+              <DropdownOption
+                key={asset}
+                label={asset}
+                selected={assetFilter === asset}
+                showDividerBelow={i < availableAssets.length - 1}
+                onSelect={() => {
+                  onAssetChange(asset);
+                  setExpanded(null);
+                }}
+              />
+            ))}
+          </ScrollView>
+        </FilterDropdown>
 
-        <View style={[styles.dividerV, { backgroundColor: colors.border }]} />
-
-        {/* Asset filter chips */}
-        {availableAssets.map((asset) => (
-          <Chip
-            key={asset}
-            label={asset}
-            active={assetFilter === asset}
-            onPress={() => handleAssetPress(asset)}
-          />
-        ))}
-      </ScrollView>
+        <FilterDropdown
+          expanded={expanded}
+          dropdownId="type"
+          onToggle={() => toggleExpanded('type')}
+          triggerLabel="Type"
+          valueLabel={typeSummary}
+        >
+          <ScrollView
+            nestedScrollEnabled
+            style={styles.dropdownScroll}
+            keyboardShouldPersistTaps="handled"
+          >
+            {TYPE_OPTIONS.map((opt, i) => (
+              <DropdownOption
+                key={`${opt.label}-${opt.value ?? 'all'}`}
+                label={opt.label}
+                selected={typeFilter === opt.value}
+                showDividerBelow={i < TYPE_OPTIONS.length - 1}
+                onSelect={() => {
+                  onTypeChange(opt.value);
+                  setExpanded(null);
+                }}
+              />
+            ))}
+          </ScrollView>
+        </FilterDropdown>
+      </View>
 
       {/* Sort controls + reset */}
       <View style={[styles.sortRow, { paddingHorizontal: spacing.md }]}>
@@ -192,7 +305,6 @@ export function TransactionFilters({
         )}
       </View>
 
-      {/* Bottom border */}
       <View style={[styles.separator, { backgroundColor: colors.border }]} />
     </View>
   );
@@ -212,6 +324,16 @@ const styles = StyleSheet.create({
   container: {
     paddingTop: 12,
     gap: 10,
+    overflow: 'visible',
+    position: 'relative',
+  },
+  /**
+   * In `TransactionList`, `FlatList` is rendered *after* this block in the DOM / view tree,
+   * so without a stacking boost the list paints over overlapping menus. Elevate while open only.
+   */
+  containerFloating: {
+    zIndex: 999,
+    elevation: 999,
   },
   searchRow: {
     flexDirection: 'row',
@@ -228,26 +350,95 @@ const styles = StyleSheet.create({
     fontFamily: 'Lato_400Regular',
     padding: 0,
   },
-  chipRow: {
+  dropdownsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingBottom: 2,
+    overflow: 'visible',
+    zIndex: 1,
+  },
+  /** Anchor for `position:absolute` dropdown panel (`top:100%`). */
+  dropdownBlock: {
+    flex: 1,
+    minWidth: 0,
+    position: 'relative',
+    zIndex: 1,
+  },
+  /** Open dropdown’s block stacks above sibling (Asset vs Type). */
+  dropdownBlockOpen: {
+    zIndex: 30,
+    elevation: 30,
+  },
+  dropdownTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 2,
-  },
-  chip: {
     borderWidth: 1,
-    borderRadius: 99,
+    borderRadius: 10,
     paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingVertical: 10,
+    gap: 8,
   },
-  chipLabel: {
-    fontSize: 12,
+  dropdownTriggerTexts: {
+    flex: 1,
+    minWidth: 0,
+  },
+  dropdownMeta: {
+    fontSize: 11,
+    fontFamily: 'Lato_400Regular',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 2,
+  },
+  dropdownValue: {
+    fontSize: 14,
     fontFamily: 'Lato_700Bold',
   },
-  dividerV: {
-    width: 1,
-    height: 20,
-    marginHorizontal: 4,
+  dropdownPanel: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: '100%',
+    marginTop: 6,
+    borderWidth: 1,
+    borderRadius: 10,
+    overflow: 'hidden',
+    maxHeight: 220,
+    zIndex: 50,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.18,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 14,
+      },
+      web: {
+        boxShadow: '0px 10px 24px rgba(0, 0, 0, 0.28)',
+      },
+    }),
+  },
+  dropdownScroll: {
+    maxHeight: 220,
+  },
+  dropdownOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    gap: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'transparent',
+  },
+  dropdownOptionLast: {
+    borderBottomWidth: 0,
+  },
+  dropdownOptionLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'Lato_400Regular',
   },
   sortRow: {
     flexDirection: 'row',

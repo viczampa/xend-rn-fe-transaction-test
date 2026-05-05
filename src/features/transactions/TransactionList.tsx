@@ -196,6 +196,8 @@ export function TransactionList() {
 const styles = StyleSheet.create({
   outer: {
     flex: 1,
+    overflow: 'visible',
+    zIndex: 0,
   },
   flatList: {
     flex: 1,
