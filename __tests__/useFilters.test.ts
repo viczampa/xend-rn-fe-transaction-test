@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { renderHook, act } from '@testing-library/react-native';
 import { useFilters } from '../src/features/transactions/useFilters';
 
@@ -6,6 +7,12 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 );
 
 describe('useFilters', () => {
+  beforeEach(async () => {
+    await act(async () => {
+      await AsyncStorage.clear();
+    });
+  });
+
   it('starts with default filters', () => {
     const { result } = renderHook(() => useFilters());
     expect(result.current.filters.search).toBe('');
